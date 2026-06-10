@@ -96,8 +96,9 @@ function App() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <h1>BlackBox</h1>
-        <p>Streaming App</p>
+        <div className="brandLogo">
+          <img src="/blackbox-logo.png" alt="BlackBox Logo" />
+        </div>
 
         <nav>
           <button type="button">Home</button>
