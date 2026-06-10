@@ -564,3 +564,34 @@ input {
   transition: width 0.2s ease;
   box-shadow: 0 0 18px rgba(0, 217, 255, 0.45);
 }
+
+/* MOVIE ADMIN FORM */
+
+.movieForm {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.movieForm input,
+.movieForm textarea {
+  width: 100%;
+  padding: 14px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.38);
+  color: #ffffff;
+  outline: none;
+  font-family: inherit;
+}
+
+.movieForm textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+.movieForm input:focus,
+.movieForm textarea:focus {
+  border-color: rgba(0, 217, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.12);
+}

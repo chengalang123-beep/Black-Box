@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "./supabaseClient";
 
-const videos = [
+const sampleVideos = [
   {
-    id: 1,
+    id: "sample-1",
     title: "Shadow City",
     category: "Action",
     description: "A dark action thriller set in a futuristic city.",
@@ -12,7 +13,7 @@ const videos = [
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
   {
-    id: 2,
+    id: "sample-2",
     title: "Ocean Lights",
     category: "Drama",
     description: "A peaceful cinematic story by the sea.",
@@ -22,7 +23,7 @@ const videos = [
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
   },
   {
-    id: 3,
+    id: "sample-3",
     title: "Night Drive",
     category: "Thriller",
     description: "A suspenseful ride through the city at night.",
@@ -30,16 +31,6 @@ const videos = [
       "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=900&q=80",
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-  },
-  {
-    id: 4,
-    title: "Skyline Live",
-    category: "Live",
-    description: "A live-style stream preview for your platform.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=80",
-    videoUrl:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
   },
 ];
 
@@ -49,6 +40,11 @@ function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const [movieTitle, setMovieTitle] = useState("");
+  const [movieCategory, setMovieCategory] = useState("Uploaded");
+  const [movieDescription, setMovieDescription] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
 
   function unlockAdmin(event) {
     event.preventDefault();
@@ -107,11 +103,28 @@ function AdminPage() {
       };
 
       xhr.onerror = () => {
-        reject(new Error("Upload failed. Please check your connection or CORS policy."));
+        reject(
+          new Error("Upload failed. Please check your connection or CORS policy.")
+        );
       };
 
       xhr.send(file);
     });
+  }
+
+  async function saveMovieToSupabase(videoKey) {
+    const { error } = await supabase.from("movies").insert({
+      title: movieTitle.trim(),
+      category: movieCategory.trim() || "Uploaded",
+      description: movieDescription.trim(),
+      thumbnail_url: thumbnailUrl.trim() || "/blackbox-logo.png",
+      video_key: videoKey,
+      video_url: "",
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   async function handleVideoUpload(event) {
@@ -124,6 +137,12 @@ function AdminPage() {
       return;
     }
 
+    if (!movieTitle.trim()) {
+      alert("Please enter the movie title first.");
+      event.target.value = "";
+      return;
+    }
+
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -132,11 +151,18 @@ function AdminPage() {
       const data = await getR2UploadUrl(file);
 
       setUploadMessage("Uploading video to Cloudflare R2...");
-
       await uploadFileWithProgress(data.uploadUrl, file);
 
-      setUploadMessage(`Upload successful! R2 file key: ${data.key}`);
-      alert("Upload successful! Check your Cloudflare R2 bucket.");
+      setUploadMessage("Saving movie details to Supabase...");
+      await saveMovieToSupabase(data.key);
+
+      setUploadMessage(`Upload successful! Saved movie: ${movieTitle}`);
+      alert("Upload successful! Your movie is now saved.");
+
+      setMovieTitle("");
+      setMovieCategory("Uploaded");
+      setMovieDescription("");
+      setThumbnailUrl("");
     } catch (error) {
       console.error(error);
       setUploadMessage("Upload failed: " + error.message);
@@ -170,12 +196,41 @@ function AdminPage() {
           </form>
         ) : (
           <div className="adminUploadBox">
-            <h2>Upload Video</h2>
+            <h2>Upload Movie</h2>
 
             <p>
-              This upload section is hidden from the public website. Upload
-              videos here and they will go to Cloudflare R2.
+              Add movie details first, then choose the video file. It will upload
+              to Cloudflare R2 and save to Supabase.
             </p>
+
+            <div className="movieForm">
+              <input
+                type="text"
+                placeholder="Movie title"
+                value={movieTitle}
+                onChange={(event) => setMovieTitle(event.target.value)}
+              />
+
+              <input
+                type="text"
+                placeholder="Category"
+                value={movieCategory}
+                onChange={(event) => setMovieCategory(event.target.value)}
+              />
+
+              <textarea
+                placeholder="Description"
+                value={movieDescription}
+                onChange={(event) => setMovieDescription(event.target.value)}
+              />
+
+              <input
+                type="text"
+                placeholder="Thumbnail image URL optional"
+                value={thumbnailUrl}
+                onChange={(event) => setThumbnailUrl(event.target.value)}
+              />
+            </div>
 
             <label className="uploadBox">
               {uploading ? "Uploading..." : "Choose Video File"}
@@ -216,14 +271,87 @@ function AdminPage() {
 }
 
 function HomePage() {
-  const [selectedVideo, setSelectedVideo] = useState(videos[0]);
+  const [selectedVideo, setSelectedVideo] = useState(sampleVideos[0]);
   const [watchList, setWatchList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [uploadedVideos, setUploadedVideos] = useState([]);
+  const [loadingMovies, setLoadingMovies] = useState(true);
 
-  const categories = ["All", ...new Set(videos.map((video) => video.category))];
+  async function getSignedWatchUrl(videoKey) {
+    const response = await fetch("/api/r2-watch-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ videoKey }),
+    });
 
-  const filteredVideos = videos.filter((video) => {
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to get watch URL");
+    }
+
+    return data.watchUrl;
+  }
+
+  useEffect(() => {
+    async function loadMovies() {
+      try {
+        setLoadingMovies(true);
+
+        const { data, error } = await supabase
+          .from("movies")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const preparedMovies = await Promise.all(
+          (data || []).map(async (movie) => {
+            let watchUrl = movie.video_url;
+
+            if (movie.video_key) {
+              watchUrl = await getSignedWatchUrl(movie.video_key);
+            }
+
+            return {
+              id: movie.id,
+              title: movie.title,
+              category: movie.category || "Uploaded",
+              description: movie.description || "",
+              thumbnail: movie.thumbnail_url || "/blackbox-logo.png",
+              videoUrl: watchUrl,
+            };
+          })
+        );
+
+        setUploadedVideos(preparedMovies);
+
+        if (preparedMovies.length > 0) {
+          setSelectedVideo(preparedMovies[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load movies:", error);
+      } finally {
+        setLoadingMovies(false);
+      }
+    }
+
+    loadMovies();
+  }, []);
+
+  const allVideos = [...uploadedVideos, ...sampleVideos];
+
+  const categories = [
+    "All",
+    ...new Set(allVideos.map((video) => video.category)),
+  ];
+
+  const filteredVideos = allVideos.filter((video) => {
     const matchesSearch =
       video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -300,7 +428,12 @@ function HomePage() {
         <section id="player" className="playerSection">
           <h3>Video Player</h3>
 
-          <video src={selectedVideo.videoUrl} controls className="videoPlayer" />
+          <video
+            key={selectedVideo.videoUrl}
+            src={selectedVideo.videoUrl}
+            controls
+            className="videoPlayer"
+          />
 
           <p className="videoTitle">{selectedVideo.title}</p>
         </section>
@@ -309,7 +442,11 @@ function HomePage() {
           <div className="sectionHeader">
             <div>
               <h3>Browse Streams</h3>
-              <p>Choose a video to start watching.</p>
+              <p>
+                {loadingMovies
+                  ? "Loading uploaded movies..."
+                  : "Choose a video to start watching."}
+              </p>
             </div>
 
             <input
