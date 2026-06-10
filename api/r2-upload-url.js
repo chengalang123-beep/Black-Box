@@ -38,35 +38,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Only video files are allowed" });
     }
 
-    if (!process.env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME.includes("/")) {
+    const bucketName = process.env.R2_BUCKET_NAME;
+    const accountId = process.env.R2_ACCOUNT_ID;
+
+    if (!bucketName || bucketName.includes("/") || bucketName.includes("http")) {
       return res.status(500).json({
         error:
-          "Invalid R2_BUCKET_NAME. It should be only the bucket name, like streambox-videos, with no slash.",
+          "Invalid R2_BUCKET_NAME. Use only the bucket name, like streambox-videos.",
       });
     }
 
-    if (!process.env.R2_ACCOUNT_ID || process.env.R2_ACCOUNT_ID.includes("http")) {
+    if (!accountId || accountId.includes("http") || accountId.includes(".")) {
       return res.status(500).json({
         error:
-          "Invalid R2_ACCOUNT_ID. It should be only the Cloudflare Account ID, not a URL.",
+          "Invalid R2_ACCOUNT_ID. Use only the Cloudflare Account ID, not a URL.",
       });
     }
 
-    const extension = fileName.includes(".")
-      ? fileName.split(".").pop().toLowerCase()
+    const originalName = fileName || "video.mp4";
+    const extension = originalName.includes(".")
+      ? originalName.split(".").pop().toLowerCase()
       : "mp4";
 
-    const safeBaseName = fileName
+    const safeBaseName = originalName
       .replace(/\.[^/.]+$/, "")
       .replace(/[^a-zA-Z0-9-_]/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "")
       .toLowerCase();
 
-    const key = `videos/${Date.now()}-${safeBaseName}.${extension}`;
+    const finalName = safeBaseName || "uploaded-video";
+    const key = `videos/${Date.now()}-${finalName}.${extension}`;
 
     const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
+      Bucket: bucketName,
       Key: key,
       ContentType: fileType,
     });
@@ -81,6 +86,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("R2 upload URL error:", error);
+
     return res.status(500).json({
       error: error.message || "Failed to create upload URL",
     });
