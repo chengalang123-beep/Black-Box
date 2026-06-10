@@ -38,8 +38,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Only video files are allowed" });
     }
 
-    const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, "-");
-    const key = `videos/${Date.now()}-${safeFileName}`;
+    if (!process.env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME.includes("/")) {
+      return res.status(500).json({
+        error:
+          "Invalid R2_BUCKET_NAME. It should be only the bucket name, like streambox-videos, with no slash.",
+      });
+    }
+
+    if (!process.env.R2_ACCOUNT_ID || process.env.R2_ACCOUNT_ID.includes("http")) {
+      return res.status(500).json({
+        error:
+          "Invalid R2_ACCOUNT_ID. It should be only the Cloudflare Account ID, not a URL.",
+      });
+    }
+
+    const extension = fileName.includes(".")
+      ? fileName.split(".").pop().toLowerCase()
+      : "mp4";
+
+    const safeBaseName = fileName
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
+
+    const key = `videos/${Date.now()}-${safeBaseName}.${extension}`;
 
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
@@ -48,7 +72,7 @@ export default async function handler(req, res) {
     });
 
     const uploadUrl = await getSignedUrl(r2, command, {
-      expiresIn: 60 * 5,
+      expiresIn: 60 * 10,
     });
 
     return res.status(200).json({
@@ -57,6 +81,8 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("R2 upload URL error:", error);
-    return res.status(500).json({ error: "Failed to create upload URL" });
+    return res.status(500).json({
+      error: error.message || "Failed to create upload URL",
+    });
   }
 }
