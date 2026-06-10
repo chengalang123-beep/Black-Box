@@ -16,6 +16,18 @@ export default async function handler(req, res) {
   }
 
   try {
+    const adminPassword = req.headers["x-admin-password"];
+
+    if (!process.env.ADMIN_PASSWORD) {
+      return res.status(500).json({
+        error: "ADMIN_PASSWORD is missing in Vercel Environment Variables",
+      });
+    }
+
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return res.status(401).json({ error: "Unauthorized upload request" });
+    }
+
     const { fileName, fileType } = req.body;
 
     if (!fileName || !fileType) {

@@ -410,3 +410,118 @@ input {
     width: 120px;
   }
 }
+/* ADMIN PAGE */
+
+.adminPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(0, 225, 255, 0.18), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(102, 51, 255, 0.18), transparent 35%),
+    #050505;
+}
+
+.adminCard {
+  width: 100%;
+  max-width: 520px;
+  padding: 34px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.065);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.adminLogo {
+  margin-bottom: 18px;
+}
+
+.adminLogo img {
+  width: 160px;
+}
+
+.adminCard h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.adminSubtext {
+  color: #b8b8b8;
+  margin-bottom: 24px;
+}
+
+.adminForm {
+  display: grid;
+  gap: 14px;
+}
+
+.adminForm input {
+  width: 100%;
+  padding: 15px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.38);
+  color: #ffffff;
+  outline: none;
+}
+
+.adminForm input:focus {
+  border-color: rgba(0, 217, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.12);
+}
+
+.adminForm button {
+  border: 0;
+  padding: 15px 18px;
+  border-radius: 14px;
+  background: #00d9ff;
+  color: #001014;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.adminUploadBox h2 {
+  margin-bottom: 8px;
+}
+
+.adminUploadBox p {
+  color: #b8b8b8;
+}
+
+.uploadBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 16px 22px;
+  border-radius: 16px;
+  background: #00d9ff;
+  color: #001014;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.uploadBox input {
+  display: none;
+}
+
+.uploadMessage {
+  margin-top: 16px;
+  color: #9fe870 !important;
+  word-break: break-word;
+}
+
+.backHome {
+  display: inline-block;
+  margin-top: 22px;
+  color: #7ef5ff;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.backHome:hover {
+  text-decoration: underline;
+}

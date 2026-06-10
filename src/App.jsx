@@ -58,7 +58,137 @@ const videos = [
   */
 ];
 
-function App() {
+function AdminPage() {
+  const [password, setPassword] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
+
+  function unlockAdmin(event) {
+    event.preventDefault();
+
+    if (!password.trim()) {
+      alert("Please enter your admin password.");
+      return;
+    }
+
+    setIsUnlocked(true);
+  }
+
+  async function uploadVideoToR2(file) {
+    const response = await fetch("/api/r2-upload-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-password": password,
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to get upload URL");
+    }
+
+    const uploadResponse = await fetch(data.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error("Upload to Cloudflare R2 failed");
+    }
+
+    return data.key;
+  }
+
+  async function handleVideoUpload(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("video/")) {
+      alert("Please upload a video file only.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadMessage("Uploading video to Cloudflare R2...");
+
+      const uploadedKey = await uploadVideoToR2(file);
+
+      setUploadMessage(`Upload successful! R2 file key: ${uploadedKey}`);
+      alert("Upload successful! Check your Cloudflare R2 bucket.");
+    } catch (error) {
+      console.error(error);
+      setUploadMessage("Upload failed: " + error.message);
+      alert("Upload failed: " + error.message);
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  return (
+    <div className="adminPage">
+      <div className="adminCard">
+        <div className="brandLogo adminLogo">
+          <img src="/blackbox-logo.png" alt="BlackBox Logo" />
+        </div>
+
+        <h1>BlackBox Admin</h1>
+        <p className="adminSubtext">Private upload page for the owner only.</p>
+
+        {!isUnlocked ? (
+          <form onSubmit={unlockAdmin} className="adminForm">
+            <input
+              type="password"
+              placeholder="Enter admin password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+
+            <button type="submit">Unlock Admin Upload</button>
+          </form>
+        ) : (
+          <div className="adminUploadBox">
+            <h2>Upload Video</h2>
+            <p>
+              This upload section is hidden from the public website. Upload
+              videos here and they will go to Cloudflare R2.
+            </p>
+
+            <label className="uploadBox">
+              {uploading ? "Uploading..." : "Choose Video File"}
+              <input
+                type="file"
+                accept="video/*"
+                onChange={handleVideoUpload}
+                disabled={uploading}
+              />
+            </label>
+
+            {uploadMessage && <p className="uploadMessage">{uploadMessage}</p>}
+
+            <a className="backHome" href="/">
+              Back to website
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HomePage() {
   const [selectedVideo, setSelectedVideo] = useState(videos[0]);
   const [watchList, setWatchList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -234,6 +364,16 @@ function App() {
       </main>
     </div>
   );
+}
+
+function App() {
+  const isAdminPage = window.location.pathname === "/admin";
+
+  if (isAdminPage) {
+    return <AdminPage />;
+  }
+
+  return <HomePage />;
 }
 
 export default App;
