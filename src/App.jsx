@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const sampleVideos = [
+const videos = [
   {
     id: 1,
     title: "Shadow City",
@@ -41,90 +41,42 @@ const sampleVideos = [
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
   },
+
+  /*
+    Add your Cloudflare R2 videos here later.
+
+    Example:
+
+    {
+      id: 5,
+      title: "My Uploaded Video",
+      category: "Uploaded",
+      description: "This video is hosted in Cloudflare R2.",
+      thumbnail: "PASTE_THUMBNAIL_IMAGE_URL_HERE",
+      videoUrl: "PASTE_R2_VIDEO_URL_HERE",
+    },
+  */
 ];
 
 function App() {
-  const [selectedVideo, setSelectedVideo] = useState(sampleVideos[0]);
+  const [selectedVideo, setSelectedVideo] = useState(videos[0]);
   const [watchList, setWatchList] = useState([]);
-  const [uploadedVideos, setUploadedVideos] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
 
-  async function uploadVideoToR2(file) {
-    const response = await fetch("/api/r2-upload-url", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fileName: file.name,
-        fileType: file.type,
-      }),
-    });
+  const categories = ["All", ...new Set(videos.map((video) => video.category))];
 
-    const data = await response.json();
+  const filteredVideos = videos.filter((video) => {
+    const matchesSearch =
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.category.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to get upload URL");
-    }
+    const matchesCategory =
+      activeCategory === "All" || video.category === activeCategory;
 
-    const uploadResponse = await fetch(data.uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-      },
-      body: file,
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error("Upload to Cloudflare R2 failed");
-    }
-
-    return data.key;
-  }
-
-  async function handleVideoUpload(event) {
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith("video/")) {
-      alert("Please upload a video file only.");
-      return;
-    }
-
-    try {
-      setUploading(true);
-      setUploadMessage("Uploading video to Cloudflare R2...");
-
-      const uploadedKey = await uploadVideoToR2(file);
-      const localPreviewUrl = URL.createObjectURL(file);
-
-      const newVideo = {
-        id: Date.now(),
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        category: "Uploaded",
-        description: "Uploaded to Cloudflare R2. This preview works in your current browser session.",
-        thumbnail:
-          "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=900&q=80",
-        videoUrl: localPreviewUrl,
-        r2Key: uploadedKey,
-      };
-
-      setUploadedVideos((prev) => [newVideo, ...prev]);
-      setSelectedVideo(newVideo);
-      setUploadMessage(`Upload successful! R2 file key: ${uploadedKey}`);
-
-      alert("Upload successful! Check your Cloudflare R2 bucket.");
-    } catch (error) {
-      console.error(error);
-      setUploadMessage("Upload failed: " + error.message);
-      alert("Upload failed: " + error.message);
-    } finally {
-      setUploading(false);
-      event.target.value = "";
-    }
-  }
+    return matchesSearch && matchesCategory;
+  });
 
   function addToWatchList(video) {
     const exists = watchList.some((item) => item.id === video.id);
@@ -137,7 +89,9 @@ function App() {
     setWatchList((prev) => [...prev, video]);
   }
 
-  const allVideos = [...uploadedVideos, ...sampleVideos];
+  function removeFromWatchList(videoId) {
+    setWatchList((prev) => prev.filter((video) => video.id !== videoId));
+  }
 
   return (
     <div className="app">
@@ -150,7 +104,7 @@ function App() {
           <button type="button">Movies</button>
           <button type="button">Series</button>
           <button type="button">My List</button>
-          <button type="button">Uploads</button>
+          <button type="button">Live</button>
         </nav>
       </aside>
 
@@ -162,12 +116,6 @@ function App() {
             <h2>{selectedVideo.title}</h2>
 
             <p>{selectedVideo.description}</p>
-
-            {selectedVideo.r2Key && (
-              <p className="r2Key">
-                R2 Key: <strong>{selectedVideo.r2Key}</strong>
-              </p>
-            )}
 
             <div className="heroButtons">
               <a href="#player">
@@ -199,56 +147,40 @@ function App() {
           <p className="videoTitle">{selectedVideo.title}</p>
         </section>
 
-        <section className="uploadSection">
-          <h3>Upload Your Video</h3>
-
-          <p>
-            Select a video from your computer. It will upload to Cloudflare R2.
-          </p>
-
-          <label className="uploadBox">
-            {uploading ? "Uploading..." : "Choose Video File"}
+        <section className="contentSection">
+          <div className="sectionHeader">
+            <div>
+              <h3>Browse Streams</h3>
+              <p>Choose a video to start watching.</p>
+            </div>
 
             <input
-              type="file"
-              accept="video/*"
-              onChange={handleVideoUpload}
-              disabled={uploading}
+              className="searchInput"
+              type="text"
+              placeholder="Search videos..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
-          </label>
+          </div>
 
-          {uploadMessage && <p className="uploadMessage">{uploadMessage}</p>}
-        </section>
-
-        <section className="contentSection">
-          <h3>Browse Streams</h3>
-
-          <div className="videoGrid">
-            {allVideos.map((video) => (
-              <div
-                className="videoCard"
-                key={video.id}
-                onClick={() => setSelectedVideo(video)}
+          <div className="categoryFilters">
+            {categories.map((category) => (
+              <button
+                type="button"
+                key={category}
+                className={activeCategory === category ? "activeCategory" : ""}
+                onClick={() => setActiveCategory(category)}
               >
-                <img src={video.thumbnail} alt={video.title} />
-
-                <div>
-                  <h4>{video.title}</h4>
-                  <p>{video.category}</p>
-                </div>
-              </div>
+                {category}
+              </button>
             ))}
           </div>
-        </section>
 
-        <section className="contentSection">
-          <h3>My List</h3>
-
-          {watchList.length === 0 ? (
-            <p className="emptyText">No videos added yet.</p>
+          {filteredVideos.length === 0 ? (
+            <p className="emptyText">No videos found.</p>
           ) : (
             <div className="videoGrid">
-              {watchList.map((video) => (
+              {filteredVideos.map((video) => (
                 <div
                   className="videoCard"
                   key={video.id}
@@ -259,6 +191,39 @@ function App() {
                   <div>
                     <h4>{video.title}</h4>
                     <p>{video.category}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="contentSection">
+          <h3>My List</h3>
+
+          {watchList.length === 0 ? (
+            <p className="emptyText">No videos added yet.</p>
+          ) : (
+            <div className="videoGrid">
+              {watchList.map((video) => (
+                <div className="videoCard" key={video.id}>
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    onClick={() => setSelectedVideo(video)}
+                  />
+
+                  <div>
+                    <h4>{video.title}</h4>
+                    <p>{video.category}</p>
+
+                    <button
+                      type="button"
+                      className="removeBtn"
+                      onClick={() => removeFromWatchList(video.id)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}
