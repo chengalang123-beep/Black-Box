@@ -41,21 +41,6 @@ const videos = [
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
   },
-
-  /*
-    Add your Cloudflare R2 videos here later.
-
-    Example:
-
-    {
-      id: 5,
-      title: "My Uploaded Video",
-      category: "Uploaded",
-      description: "This video is hosted in Cloudflare R2.",
-      thumbnail: "PASTE_THUMBNAIL_IMAGE_URL_HERE",
-      videoUrl: "PASTE_R2_VIDEO_URL_HERE",
-    },
-  */
 ];
 
 function AdminPage() {
@@ -63,6 +48,7 @@ function AdminPage() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   function unlockAdmin(event) {
     event.preventDefault();
@@ -75,7 +61,7 @@ function AdminPage() {
     setIsUnlocked(true);
   }
 
-  async function uploadVideoToR2(file) {
+  async function getR2UploadUrl(file) {
     const response = await fetch("/api/r2-upload-url", {
       method: "POST",
       headers: {
@@ -94,19 +80,38 @@ function AdminPage() {
       throw new Error(data.error || "Failed to get upload URL");
     }
 
-    const uploadResponse = await fetch(data.uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-      },
-      body: file,
+    return data;
+  }
+
+  function uploadFileWithProgress(uploadUrl, file) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.open("PUT", uploadUrl, true);
+      xhr.setRequestHeader("Content-Type", file.type);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadProgress(100);
+          resolve();
+        } else {
+          reject(new Error("Upload to Cloudflare R2 failed"));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Upload failed. Please check your connection or CORS policy."));
+      };
+
+      xhr.send(file);
     });
-
-    if (!uploadResponse.ok) {
-      throw new Error("Upload to Cloudflare R2 failed");
-    }
-
-    return data.key;
   }
 
   async function handleVideoUpload(event) {
@@ -121,11 +126,16 @@ function AdminPage() {
 
     try {
       setUploading(true);
+      setUploadProgress(0);
+      setUploadMessage("Preparing upload...");
+
+      const data = await getR2UploadUrl(file);
+
       setUploadMessage("Uploading video to Cloudflare R2...");
 
-      const uploadedKey = await uploadVideoToR2(file);
+      await uploadFileWithProgress(data.uploadUrl, file);
 
-      setUploadMessage(`Upload successful! R2 file key: ${uploadedKey}`);
+      setUploadMessage(`Upload successful! R2 file key: ${data.key}`);
       alert("Upload successful! Check your Cloudflare R2 bucket.");
     } catch (error) {
       console.error(error);
@@ -161,6 +171,7 @@ function AdminPage() {
         ) : (
           <div className="adminUploadBox">
             <h2>Upload Video</h2>
+
             <p>
               This upload section is hidden from the public website. Upload
               videos here and they will go to Cloudflare R2.
@@ -175,6 +186,22 @@ function AdminPage() {
                 disabled={uploading}
               />
             </label>
+
+            {uploading && (
+              <div className="progressWrap">
+                <div className="progressInfo">
+                  <span>Upload Progress</span>
+                  <strong>{uploadProgress}%</strong>
+                </div>
+
+                <div className="progressBar">
+                  <div
+                    className="progressFill"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
 
             {uploadMessage && <p className="uploadMessage">{uploadMessage}</p>}
 

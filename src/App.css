@@ -525,3 +525,42 @@ input {
 .backHome:hover {
   text-decoration: underline;
 }
+
+/* UPLOAD PROGRESS BAR */
+
+.progressWrap {
+  margin: 22px auto 0;
+  width: 100%;
+  max-width: 360px;
+}
+
+.progressInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #d9faff;
+  font-size: 14px;
+}
+
+.progressInfo strong {
+  color: #7ef5ff;
+}
+
+.progressBar {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(126, 245, 255, 0.18);
+}
+
+.progressFill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00d9ff, #7ef5ff);
+  transition: width 0.2s ease;
+  box-shadow: 0 0 18px rgba(0, 217, 255, 0.45);
+}
