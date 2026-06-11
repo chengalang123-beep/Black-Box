@@ -375,7 +375,7 @@ function LandingPage({ movies, loading, onAddToList, isInMyList }) {
   );
 }
 
-function MyListPage({ watchList, onRemoveFromList, onAddToList, isInMyList }) {
+function MyListPage({ watchList, onRemoveFromList }) {
   return (
     <Layout>
       <section className="movieLibrary">
@@ -486,6 +486,63 @@ function MovieDetailsPage({ movie, onAddToList, isSaved }) {
 }
 
 function PlayerPage({ movie }) {
+  const [freshWatchUrl, setFreshWatchUrl] = useState("");
+  const [loadingPlayer, setLoadingPlayer] = useState(false);
+  const [playerError, setPlayerError] = useState("");
+
+  useEffect(() => {
+    async function loadFreshWatchUrl() {
+      if (!movie) return;
+
+      try {
+        setLoadingPlayer(true);
+        setPlayerError("");
+
+        if (!movie.videoKey) {
+          setFreshWatchUrl(movie.videoUrl);
+          return;
+        }
+
+        const response = await fetch("/api/r2-watch-url", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ videoKey: movie.videoKey }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to load video.");
+        }
+
+        setFreshWatchUrl(data.watchUrl);
+      } catch (error) {
+        console.error(error);
+        setPlayerError(error.message);
+      } finally {
+        setLoadingPlayer(false);
+      }
+    }
+
+    loadFreshWatchUrl();
+  }, [movie]);
+
+  function openFullscreen() {
+    const player = document.getElementById("blackbox-player");
+
+    if (player?.requestFullscreen) {
+      player.requestFullscreen();
+    } else if (player?.webkitRequestFullscreen) {
+      player.webkitRequestFullscreen();
+    } else if (player?.msRequestFullscreen) {
+      player.msRequestFullscreen();
+    } else {
+      alert("Fullscreen is not supported on this browser.");
+    }
+  }
+
   if (!movie) {
     return (
       <Layout>
@@ -513,13 +570,31 @@ function PlayerPage({ movie }) {
           </div>
         </div>
 
-        <video
-          key={movie.videoUrl}
-          src={movie.videoUrl}
-          controls
-          autoPlay
-          className="fullPlayer"
-        />
+        {loadingPlayer ? (
+          <p className="emptyText">Loading video...</p>
+        ) : playerError ? (
+          <p className="emptyText">Player error: {playerError}</p>
+        ) : (
+          <div className="playerWrapper">
+            <video
+              id="blackbox-player"
+              key={freshWatchUrl}
+              src={freshWatchUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="fullPlayer"
+            />
+
+            <button
+              type="button"
+              className="fullscreenBtn"
+              onClick={openFullscreen}
+            >
+              Fullscreen
+            </button>
+          </div>
+        )}
       </section>
     </Layout>
   );
@@ -601,6 +676,7 @@ function App() {
               category: movie.category || "Movie",
               description: movie.description || "",
               thumbnail: movie.thumbnail_url || "/blackbox-logo.png",
+              videoKey: movie.video_key,
               videoUrl: watchUrl,
             };
           })
@@ -628,8 +704,6 @@ function App() {
       <MyListPage
         watchList={watchList}
         onRemoveFromList={removeFromMyList}
-        onAddToList={addToMyList}
-        isInMyList={isInMyList}
       />
     );
   }

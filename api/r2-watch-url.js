@@ -16,26 +16,6 @@ export default async function handler(req, res) {
     const secretAccessKey = cleanEnv(process.env.R2_SECRET_ACCESS_KEY);
     const bucketName = cleanEnv(process.env.R2_BUCKET_NAME);
 
-    if (!accountId || accountId.includes("http") || accountId.includes(".")) {
-      return res.status(500).json({
-        error:
-          "R2_ACCOUNT_ID is incorrect. Use only the Cloudflare Account ID, not a URL.",
-      });
-    }
-
-    if (!bucketName || bucketName.includes("/") || bucketName.includes("http")) {
-      return res.status(500).json({
-        error:
-          "R2_BUCKET_NAME is incorrect. Use only the bucket name, example: streambox-videos",
-      });
-    }
-
-    if (!accessKeyId || !secretAccessKey) {
-      return res.status(500).json({
-        error: "R2 access key or secret key is missing in Vercel.",
-      });
-    }
-
     const { videoKey } = req.body;
 
     if (!videoKey) {
@@ -57,7 +37,7 @@ export default async function handler(req, res) {
     });
 
     const watchUrl = await getSignedUrl(r2, command, {
-      expiresIn: 60 * 60,
+      expiresIn: 60 * 60 * 6,
     });
 
     return res.status(200).json({
