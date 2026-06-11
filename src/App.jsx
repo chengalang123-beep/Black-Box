@@ -1,39 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
-const sampleVideos = [
-  {
-    id: "sample-1",
-    title: "Shadow City",
-    category: "Action",
-    description: "A dark action thriller set in a futuristic city.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=80",
-    videoUrl:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  },
-  {
-    id: "sample-2",
-    title: "Ocean Lights",
-    category: "Drama",
-    description: "A peaceful cinematic story by the sea.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
-    videoUrl:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  },
-  {
-    id: "sample-3",
-    title: "Night Drive",
-    category: "Thriller",
-    description: "A suspenseful ride through the city at night.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=900&q=80",
-    videoUrl:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-  },
-];
-
 function AdminPage() {
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -271,7 +238,7 @@ function AdminPage() {
 }
 
 function HomePage() {
-  const [selectedVideo, setSelectedVideo] = useState(sampleVideos[0]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [watchList, setWatchList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -344,11 +311,11 @@ function HomePage() {
     loadMovies();
   }, []);
 
-  const allVideos = [...uploadedVideos, ...sampleVideos];
+  const allVideos = uploadedVideos;
 
   const categories = [
     "All",
-    ...new Set(allVideos.map((video) => video.category)),
+    ...new Set(allVideos.map((video) => video.category).filter(Boolean)),
   ];
 
   const filteredVideos = allVideos.filter((video) => {
@@ -378,6 +345,46 @@ function HomePage() {
     setWatchList((prev) => prev.filter((video) => video.id !== videoId));
   }
 
+  if (loadingMovies) {
+    return (
+      <div className="app">
+        <aside className="sidebar">
+          <div className="brandLogo">
+            <img src="/blackbox-logo.png" alt="BlackBox Logo" />
+          </div>
+        </aside>
+
+        <main className="main">
+          <section className="contentSection">
+            <h3>Loading movies...</h3>
+            <p className="emptyText">Please wait while your uploaded movies load.</p>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (!selectedVideo && uploadedVideos.length === 0) {
+    return (
+      <div className="app">
+        <aside className="sidebar">
+          <div className="brandLogo">
+            <img src="/blackbox-logo.png" alt="BlackBox Logo" />
+          </div>
+        </aside>
+
+        <main className="main">
+          <section className="contentSection">
+            <h3>No movies yet</h3>
+            <p className="emptyText">
+              Upload a movie from the admin page and it will appear here.
+            </p>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -388,9 +395,7 @@ function HomePage() {
         <nav>
           <button type="button">Home</button>
           <button type="button">Movies</button>
-          <button type="button">Series</button>
           <button type="button">My List</button>
-          <button type="button">Live</button>
         </nav>
       </aside>
 
@@ -421,7 +426,11 @@ function HomePage() {
           </div>
 
           <div className="heroCard">
-            <img src={selectedVideo.thumbnail} alt={selectedVideo.title} />
+            <img
+              src={selectedVideo.thumbnail}
+              alt={selectedVideo.title}
+              className="posterContain"
+            />
           </div>
         </section>
 
@@ -442,11 +451,7 @@ function HomePage() {
           <div className="sectionHeader">
             <div>
               <h3>Browse Streams</h3>
-              <p>
-                {loadingMovies
-                  ? "Loading uploaded movies..."
-                  : "Choose a video to start watching."}
-              </p>
+              <p>Choose a video to start watching.</p>
             </div>
 
             <input
@@ -481,7 +486,13 @@ function HomePage() {
                   key={video.id}
                   onClick={() => setSelectedVideo(video)}
                 >
-                  <img src={video.thumbnail} alt={video.title} />
+                  <div className="videoThumbWrap">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="videoThumbnailContain"
+                    />
+                  </div>
 
                   <div>
                     <h4>{video.title}</h4>
@@ -502,11 +513,14 @@ function HomePage() {
             <div className="videoGrid">
               {watchList.map((video) => (
                 <div className="videoCard" key={video.id}>
-                  <img
-                    src={video.thumbnail}
-                    alt={video.title}
-                    onClick={() => setSelectedVideo(video)}
-                  />
+                  <div className="videoThumbWrap">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="videoThumbnailContain"
+                      onClick={() => setSelectedVideo(video)}
+                    />
+                  </div>
 
                   <div>
                     <h4>{video.title}</h4>
