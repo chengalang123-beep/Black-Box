@@ -11,36 +11,36 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font-family: inherit;
 }
 
-.app {
+a {
+  color: inherit;
+}
+
+.appShell {
   min-height: 100vh;
   display: flex;
   background:
-    radial-gradient(circle at top left, rgba(0, 225, 255, 0.18), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(102, 51, 255, 0.18), transparent 35%),
+    radial-gradient(circle at top left, rgba(0, 225, 255, 0.16), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(102, 51, 255, 0.16), transparent 34%),
     #050505;
 }
 
-/* SIDEBAR */
-
 .sidebar {
-  width: 240px;
+  width: 220px;
   min-height: 100vh;
-  padding: 28px 22px;
-  background: rgba(10, 10, 10, 0.9);
+  padding: 22px;
+  background: rgba(7, 10, 10, 0.95);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
 }
 
 .brandLogo {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: block;
   margin-bottom: 28px;
 }
 
@@ -50,7 +50,7 @@ input {
   height: auto;
   border-radius: 18px;
   object-fit: contain;
-  box-shadow: 0 18px 45px rgba(0, 225, 255, 0.18);
+  box-shadow: 0 18px 45px rgba(0, 225, 255, 0.12);
 }
 
 .sidebar nav {
@@ -58,51 +58,54 @@ input {
   gap: 12px;
 }
 
-.sidebar button {
-  text-align: left;
-  border: 0;
-  padding: 13px 14px;
+.sidebar nav a {
+  text-decoration: none;
+  padding: 14px 15px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
-  cursor: pointer;
+  font-weight: 800;
   transition: 0.2s ease;
 }
 
-.sidebar button:hover {
-  background: rgba(0, 225, 255, 0.2);
+.sidebar nav a:hover {
+  background: rgba(0, 217, 255, 0.18);
   transform: translateX(4px);
 }
 
-/* MAIN */
-
-.main {
+.pageMain {
   flex: 1;
   padding: 28px;
   overflow: hidden;
 }
 
-/* HERO */
-
-.hero {
-  display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
-  gap: 24px;
-  min-height: 420px;
-  padding: 36px;
+.landingHero {
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  padding: 42px;
   border-radius: 30px;
   background:
-    linear-gradient(135deg, rgba(0, 0, 0, 0.92), rgba(18, 18, 18, 0.65)),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.92), rgba(15, 15, 15, 0.7)),
     url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80");
   background-size: cover;
   background-position: center;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
 }
 
-.heroText {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.landingHero h1 {
+  max-width: 760px;
+  margin: 16px 0;
+  font-size: clamp(42px, 7vw, 86px);
+  line-height: 0.95;
+  letter-spacing: -3px;
+}
+
+.landingHero p {
+  max-width: 620px;
+  color: #d6d6d6;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
 .tag {
@@ -113,106 +116,19 @@ input {
   color: #7ef5ff;
   border: 1px solid rgba(126, 245, 255, 0.3);
   font-size: 13px;
-  font-weight: 800;
-  margin-bottom: 16px;
+  font-weight: 900;
 }
 
-.hero h2 {
-  margin: 0;
-  font-size: clamp(42px, 7vw, 82px);
-  line-height: 0.95;
-  letter-spacing: -3px;
-}
-
-.hero p {
-  max-width: 620px;
-  color: #d6d6d6;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-.heroButtons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.watchBtn,
-.listBtn {
-  border: 0;
-  padding: 14px 22px;
-  border-radius: 14px;
-  cursor: pointer;
-  color: white;
-  font-weight: 800;
-  transition: 0.2s ease;
-}
-
-.watchBtn {
-  background: #00d9ff;
-  color: #001014;
-  box-shadow: 0 12px 30px rgba(0, 217, 255, 0.25);
-}
-
-.watchBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(0, 217, 255, 0.35);
-}
-
-.listBtn {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.listBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.heroCard {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.heroCard img {
-  width: 100%;
-  max-height: 330px;
-  object-fit: cover;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-/* PLAYER AND SECTIONS */
-
-.playerSection,
-.contentSection {
+.movieLibrary,
+.contentSection,
+.watchPage,
+.movieDetailsPage {
   margin-top: 28px;
   padding: 24px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
-
-.playerSection h3,
-.contentSection h3 {
-  margin: 0 0 16px;
-  font-size: 24px;
-}
-
-.videoPlayer {
-  width: 100%;
-  max-height: 560px;
-  border-radius: 20px;
-  background: #000000;
-  outline: none;
-}
-
-.videoTitle {
-  margin-bottom: 0;
-  color: #cfcfcf;
-}
-
-/* BROWSE HEADER */
 
 .sectionHeader {
   display: flex;
@@ -222,8 +138,10 @@ input {
   margin-bottom: 18px;
 }
 
+.sectionHeader h2,
 .sectionHeader h3 {
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  font-size: 28px;
 }
 
 .sectionHeader p {
@@ -232,7 +150,7 @@ input {
 }
 
 .searchInput {
-  min-width: 260px;
+  min-width: 280px;
   padding: 13px 15px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -241,22 +159,16 @@ input {
   outline: none;
 }
 
-.searchInput::placeholder {
-  color: #9c9c9c;
-}
-
 .searchInput:focus {
   border-color: rgba(0, 217, 255, 0.7);
   box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.12);
 }
 
-/* CATEGORY FILTERS */
-
 .categoryFilters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .categoryFilters button {
@@ -266,7 +178,7 @@ input {
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
   transition: 0.2s ease;
 }
 
@@ -276,140 +188,160 @@ input {
   color: #7ef5ff;
 }
 
-/* VIDEO GRID */
-
-.videoGrid {
+.posterGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 22px;
 }
 
-.videoCard {
+.posterCard {
+  text-decoration: none;
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.07);
-  cursor: pointer;
   transition: 0.2s ease;
+  display: block;
 }
 
-.videoCard:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.11);
+.posterCard:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.videoCard img {
+.posterImageWrap {
   width: 100%;
-  height: 160px;
-  object-fit: cover;
+  height: 300px;
+  background: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.videoCard div {
+.posterImageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.posterInfo {
   padding: 14px;
 }
 
-.videoCard h4 {
-  margin: 0 0 6px;
+.posterInfo h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
 }
 
-.videoCard p {
+.posterInfo p {
   margin: 0;
   color: #b8b8b8;
-  font-size: 14px;
+}
+
+.movieDetailsPage {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 34px;
+  align-items: center;
+  min-height: calc(100vh - 56px);
+}
+
+.detailsPoster {
+  background: #111111;
+  border-radius: 26px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detailsPoster img {
+  width: 100%;
+  max-height: 620px;
+  object-fit: contain;
+  border-radius: 18px;
+}
+
+.detailsInfo h1 {
+  margin: 18px 0;
+  font-size: clamp(46px, 8vw, 92px);
+  line-height: 0.95;
+  letter-spacing: -3px;
+}
+
+.detailsInfo p {
+  max-width: 720px;
+  color: #d6d6d6;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.heroButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.watchBtn,
+.listBtn,
+.linkButton {
+  border: 0;
+  padding: 14px 22px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.watchBtn {
+  background: #00d9ff;
+  color: #001014;
+  box-shadow: 0 12px 30px rgba(0, 217, 255, 0.25);
+}
+
+.watchBtn:hover {
+  box-shadow: 0 18px 40px rgba(0, 217, 255, 0.35);
+}
+
+.listBtn {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.watchPage {
+  min-height: calc(100vh - 56px);
+}
+
+.watchHeader {
+  margin-bottom: 18px;
+}
+
+.watchHeader h1 {
+  margin: 14px 0 4px;
+  font-size: 40px;
+}
+
+.watchHeader p {
+  margin: 0;
+  color: #b8b8b8;
+}
+
+.fullPlayer {
+  width: 100%;
+  max-height: 75vh;
+  border-radius: 22px;
+  background: #000000;
+  outline: none;
 }
 
 .emptyText {
   color: #b8b8b8;
 }
 
-/* MY LIST REMOVE BUTTON */
-
-.removeBtn {
-  margin-top: 12px;
-  padding: 9px 12px;
-  border: 0;
-  border-radius: 10px;
-  background: rgba(255, 80, 80, 0.18);
-  color: #ffb6b6;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.removeBtn:hover {
-  background: rgba(255, 80, 80, 0.28);
-}
-
-/* RESPONSIVE */
-
-@media (max-width: 900px) {
-  .app {
-    display: block;
-  }
-
-  .sidebar {
-    width: 100%;
-    min-height: auto;
-    position: relative;
-  }
-
-  .brandLogo {
-    justify-content: flex-start;
-  }
-
-  .brandLogo img {
-    width: 130px;
-  }
-
-  .sidebar nav {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    overflow-x: auto;
-  }
-
-  .sidebar button {
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .main {
-    padding: 18px;
-  }
-
-  .hero {
-    grid-template-columns: 1fr;
-    padding: 26px;
-  }
-
-  .sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .searchInput {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .videoGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .sidebar nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hero h2 {
-    font-size: 42px;
-  }
-
-  .videoGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .brandLogo img {
-    width: 120px;
-  }
-}
 /* ADMIN PAGE */
 
 .adminPage {
@@ -426,7 +358,7 @@ input {
 
 .adminCard {
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   padding: 34px;
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.065);
@@ -436,6 +368,8 @@ input {
 }
 
 .adminLogo {
+  display: flex;
+  justify-content: center;
   margin-bottom: 18px;
 }
 
@@ -448,17 +382,20 @@ input {
   font-size: 34px;
 }
 
-.adminSubtext {
+.adminSubtext,
+.adminUploadBox p {
   color: #b8b8b8;
-  margin-bottom: 24px;
 }
 
-.adminForm {
+.adminForm,
+.movieForm {
   display: grid;
   gap: 14px;
 }
 
-.adminForm input {
+.adminForm input,
+.movieForm input,
+.movieForm textarea {
   width: 100%;
   padding: 15px 16px;
   border-radius: 14px;
@@ -468,12 +405,17 @@ input {
   outline: none;
 }
 
-.adminForm input:focus {
-  border-color: rgba(0, 217, 255, 0.7);
-  box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.12);
+.movieForm {
+  margin: 18px 0;
 }
 
-.adminForm button {
+.movieForm textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+.adminForm button,
+.uploadBox {
   border: 0;
   padding: 15px 18px;
   border-radius: 14px;
@@ -483,25 +425,9 @@ input {
   cursor: pointer;
 }
 
-.adminUploadBox h2 {
-  margin-bottom: 8px;
-}
-
-.adminUploadBox p {
-  color: #b8b8b8;
-}
-
 .uploadBox {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   margin-top: 14px;
-  padding: 16px 22px;
-  border-radius: 16px;
-  background: #00d9ff;
-  color: #001014;
-  font-weight: 900;
-  cursor: pointer;
 }
 
 .uploadBox input {
@@ -516,17 +442,11 @@ input {
 
 .backHome {
   display: inline-block;
-  margin-top: 22px;
+  margin-top: 18px;
   color: #7ef5ff;
   text-decoration: none;
   font-weight: 800;
 }
-
-.backHome:hover {
-  text-decoration: underline;
-}
-
-/* UPLOAD PROGRESS BAR */
 
 .progressWrap {
   margin: 22px auto 0;
@@ -536,7 +456,6 @@ input {
 
 .progressInfo {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
   color: #d9faff;
@@ -553,73 +472,71 @@ input {
   border-radius: 999px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(126, 245, 255, 0.18);
 }
 
 .progressFill {
   height: 100%;
-  width: 0%;
-  border-radius: 999px;
   background: linear-gradient(90deg, #00d9ff, #7ef5ff);
   transition: width 0.2s ease;
-  box-shadow: 0 0 18px rgba(0, 217, 255, 0.45);
 }
 
-/* MOVIE ADMIN FORM */
+@media (max-width: 900px) {
+  .appShell {
+    display: block;
+  }
 
-.movieForm {
-  display: grid;
-  gap: 12px;
-  margin: 18px 0;
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    position: relative;
+  }
+
+  .brandLogo img {
+    width: 130px;
+  }
+
+  .sidebar nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pageMain {
+    padding: 18px;
+  }
+
+  .landingHero {
+    padding: 28px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .searchInput {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .movieDetailsPage {
+    grid-template-columns: 1fr;
+  }
+
+  .posterImageWrap {
+    height: 280px;
+  }
 }
 
-.movieForm input,
-.movieForm textarea {
-  width: 100%;
-  padding: 14px 15px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.38);
-  color: #ffffff;
-  outline: none;
-  font-family: inherit;
-}
+@media (max-width: 560px) {
+  .landingHero h1 {
+    font-size: 42px;
+  }
 
-.movieForm textarea {
-  min-height: 95px;
-  resize: vertical;
-}
+  .posterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
 
-.movieForm input:focus,
-.movieForm textarea:focus {
-  border-color: rgba(0, 217, 255, 0.7);
-  box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.12);
-}
-
-/* SHOW FULL POSTER / THUMBNAIL */
-
-.videoThumbWrap {
-  width: 100%;
-  height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111111;
-  overflow: hidden;
-}
-
-.videoThumbnailContain {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #111111;
-}
-
-.posterContain {
-  width: 100%;
-  max-height: 330px;
-  object-fit: contain !important;
-  background: #111111;
-  border-radius: 24px;
-  padding: 10px;
+  .posterImageWrap {
+    height: 240px;
+  }
 }

@@ -9,7 +9,7 @@ function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const [movieTitle, setMovieTitle] = useState("");
-  const [movieCategory, setMovieCategory] = useState("Uploaded");
+  const [movieCategory, setMovieCategory] = useState("Movie");
   const [movieDescription, setMovieDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
 
@@ -82,7 +82,7 @@ function AdminPage() {
   async function saveMovieToSupabase(videoKey) {
     const { error } = await supabase.from("movies").insert({
       title: movieTitle.trim(),
-      category: movieCategory.trim() || "Uploaded",
+      category: movieCategory.trim() || "Movie",
       description: movieDescription.trim(),
       thumbnail_url: thumbnailUrl.trim() || "/blackbox-logo.png",
       video_key: videoKey,
@@ -127,7 +127,7 @@ function AdminPage() {
       alert("Upload successful! Your movie is now saved.");
 
       setMovieTitle("");
-      setMovieCategory("Uploaded");
+      setMovieCategory("Movie");
       setMovieDescription("");
       setThumbnailUrl("");
     } catch (error) {
@@ -193,7 +193,7 @@ function AdminPage() {
 
               <input
                 type="text"
-                placeholder="Thumbnail image URL optional"
+                placeholder="Thumbnail image URL, example: /tangerine.jpg"
                 value={thumbnailUrl}
                 onChange={(event) => setThumbnailUrl(event.target.value)}
               />
@@ -237,12 +237,203 @@ function AdminPage() {
   );
 }
 
-function HomePage() {
-  const [selectedVideo, setSelectedVideo] = useState(null);
-  const [watchList, setWatchList] = useState([]);
+function Layout({ children }) {
+  return (
+    <div className="appShell">
+      <aside className="sidebar">
+        <a href="/" className="brandLogo">
+          <img src="/blackbox-logo.png" alt="BlackBox Logo" />
+        </a>
+
+        <nav>
+          <a href="/">Movies</a>
+          <a href="/#my-list">My List</a>
+        </nav>
+      </aside>
+
+      <main className="pageMain">{children}</main>
+    </div>
+  );
+}
+
+function LandingPage({ movies, loading }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [uploadedVideos, setUploadedVideos] = useState([]);
+
+  const categories = [
+    "All",
+    ...new Set(movies.map((movie) => movie.category).filter(Boolean)),
+  ];
+
+  const filteredMovies = movies.filter((movie) => {
+    const matchesSearch =
+      movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      movie.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      movie.category.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory =
+      activeCategory === "All" || movie.category === activeCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <Layout>
+      <section className="landingHero">
+        <div>
+          <span className="tag">BlackBox Streaming</span>
+          <h1>Watch your movies anytime.</h1>
+          <p>
+            Browse your uploaded movie library and choose a title to start
+            watching.
+          </p>
+        </div>
+      </section>
+
+      <section id="movies" className="movieLibrary">
+        <div className="sectionHeader">
+          <div>
+            <h2>Movies</h2>
+            <p>
+              {loading
+                ? "Loading movies..."
+                : `${filteredMovies.length} movie${
+                    filteredMovies.length === 1 ? "" : "s"
+                  } available`}
+            </p>
+          </div>
+
+          <input
+            className="searchInput"
+            type="text"
+            placeholder="Search movies..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div className="categoryFilters">
+          {categories.map((category) => (
+            <button
+              type="button"
+              key={category}
+              className={activeCategory === category ? "activeCategory" : ""}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <p className="emptyText">Loading your movies...</p>
+        ) : filteredMovies.length === 0 ? (
+          <p className="emptyText">No movies found.</p>
+        ) : (
+          <div className="posterGrid">
+            {filteredMovies.map((movie) => (
+              <a href={`/movie/${movie.id}`} className="posterCard" key={movie.id}>
+                <div className="posterImageWrap">
+                  <img src={movie.thumbnail} alt={movie.title} />
+                </div>
+
+                <div className="posterInfo">
+                  <h3>{movie.title}</h3>
+                  <p>{movie.category}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+    </Layout>
+  );
+}
+
+function MovieDetailsPage({ movie }) {
+  if (!movie) {
+    return (
+      <Layout>
+        <section className="contentSection">
+          <h2>Movie not found</h2>
+          <p className="emptyText">Go back to the Movies page.</p>
+          <a className="watchBtn linkButton" href="/">
+            Back to Movies
+          </a>
+        </section>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <section className="movieDetailsPage">
+        <div className="detailsPoster">
+          <img src={movie.thumbnail} alt={movie.title} />
+        </div>
+
+        <div className="detailsInfo">
+          <span className="tag">{movie.category}</span>
+          <h1>{movie.title}</h1>
+          <p>{movie.description}</p>
+
+          <div className="heroButtons">
+            <a className="watchBtn linkButton" href={`/watch/${movie.id}`}>
+              Play Movie
+            </a>
+
+            <a className="listBtn linkButton" href="/">
+              Back to Movies
+            </a>
+          </div>
+        </div>
+      </section>
+    </Layout>
+  );
+}
+
+function PlayerPage({ movie }) {
+  if (!movie) {
+    return (
+      <Layout>
+        <section className="contentSection">
+          <h2>Movie not found</h2>
+          <p className="emptyText">Go back to the Movies page.</p>
+          <a className="watchBtn linkButton" href="/">
+            Back to Movies
+          </a>
+        </section>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <section className="watchPage">
+        <div className="watchHeader">
+          <div>
+            <a href={`/movie/${movie.id}`} className="backHome">
+              ← Back to movie
+            </a>
+            <h1>{movie.title}</h1>
+            <p>{movie.category}</p>
+          </div>
+        </div>
+
+        <video
+          key={movie.videoUrl}
+          src={movie.videoUrl}
+          controls
+          autoPlay
+          className="fullPlayer"
+        />
+      </section>
+    </Layout>
+  );
+}
+
+function App() {
+  const [movies, setMovies] = useState([]);
   const [loadingMovies, setLoadingMovies] = useState(true);
 
   async function getSignedWatchUrl(videoKey) {
@@ -263,25 +454,6 @@ function HomePage() {
     return data.watchUrl;
   }
 
-  function goToSection(sectionId) {
-    const section = document.getElementById(sectionId);
-
-    if (section) {
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }
-
-  function playMovie(video) {
-    setSelectedVideo(video);
-
-    setTimeout(() => {
-      goToSection("player");
-    }, 100);
-  }
-
   useEffect(() => {
     async function loadMovies() {
       try {
@@ -292,9 +464,7 @@ function HomePage() {
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const preparedMovies = await Promise.all(
           (data || []).map(async (movie) => {
@@ -307,7 +477,7 @@ function HomePage() {
             return {
               id: movie.id,
               title: movie.title,
-              category: movie.category || "Uploaded",
+              category: movie.category || "Movie",
               description: movie.description || "",
               thumbnail: movie.thumbnail_url || "/blackbox-logo.png",
               videoUrl: watchUrl,
@@ -315,11 +485,7 @@ function HomePage() {
           })
         );
 
-        setUploadedVideos(preparedMovies);
-
-        if (preparedMovies.length > 0) {
-          setSelectedVideo(preparedMovies[0]);
-        }
+        setMovies(preparedMovies);
       } catch (error) {
         console.error("Failed to load movies:", error);
       } finally {
@@ -330,262 +496,47 @@ function HomePage() {
     loadMovies();
   }, []);
 
-  const allVideos = uploadedVideos;
+  const path = window.location.pathname;
 
-  const categories = [
-    "All",
-    ...new Set(allVideos.map((video) => video.category).filter(Boolean)),
-  ];
-
-  const filteredVideos = allVideos.filter((video) => {
-    const matchesSearch =
-      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      video.category.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      activeCategory === "All" || video.category === activeCategory;
-
-    return matchesSearch && matchesCategory;
-  });
-
-  function addToWatchList(video) {
-    const exists = watchList.some((item) => item.id === video.id);
-
-    if (exists) {
-      alert("This video is already in My List.");
-      return;
-    }
-
-    setWatchList((prev) => [...prev, video]);
-  }
-
-  function removeFromWatchList(videoId) {
-    setWatchList((prev) => prev.filter((video) => video.id !== videoId));
-  }
-
-  if (loadingMovies) {
-    return (
-      <div className="app">
-        <aside className="sidebar">
-          <div className="brandLogo">
-            <img src="/blackbox-logo.png" alt="BlackBox Logo" />
-          </div>
-        </aside>
-
-        <main className="main">
-          <section className="contentSection">
-            <h3>Loading movies...</h3>
-            <p className="emptyText">Please wait while your uploaded movies load.</p>
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  if (!selectedVideo && uploadedVideos.length === 0) {
-    return (
-      <div className="app">
-        <aside className="sidebar">
-          <div className="brandLogo">
-            <img src="/blackbox-logo.png" alt="BlackBox Logo" />
-          </div>
-
-          <nav>
-            <button type="button" onClick={() => goToSection("movies")}>
-              Movies
-            </button>
-
-            <button type="button" onClick={() => goToSection("my-list")}>
-              My List
-            </button>
-          </nav>
-        </aside>
-
-        <main className="main">
-          <section className="contentSection">
-            <h3>No movies yet</h3>
-            <p className="emptyText">
-              Upload a movie from the admin page and it will appear here.
-            </p>
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="app">
-      <aside className="sidebar">
-        <div className="brandLogo">
-          <img src="/blackbox-logo.png" alt="BlackBox Logo" />
-        </div>
-
-        <nav>
-          <button type="button" onClick={() => goToSection("movies")}>
-            Movies
-          </button>
-
-          <button type="button" onClick={() => goToSection("my-list")}>
-            My List
-          </button>
-        </nav>
-      </aside>
-
-      <main className="main">
-        <section className="hero">
-          <div className="heroText">
-            <span className="tag">Now Streaming</span>
-
-            <h2>{selectedVideo.title}</h2>
-
-            <p>{selectedVideo.description}</p>
-
-            <div className="heroButtons">
-              <button
-                type="button"
-                className="watchBtn"
-                onClick={() => goToSection("player")}
-              >
-                Watch Now
-              </button>
-
-              <button
-                type="button"
-                className="listBtn"
-                onClick={() => addToWatchList(selectedVideo)}
-              >
-                + My List
-              </button>
-            </div>
-          </div>
-
-          <div className="heroCard">
-            <img
-              src={selectedVideo.thumbnail}
-              alt={selectedVideo.title}
-              className="posterContain"
-            />
-          </div>
-        </section>
-
-        <section id="player" className="playerSection">
-          <h3>{selectedVideo.title}</h3>
-
-          <video
-            key={selectedVideo.videoUrl}
-            src={selectedVideo.videoUrl}
-            controls
-            className="videoPlayer"
-          />
-
-          <p className="videoTitle">{selectedVideo.category}</p>
-        </section>
-
-        <section id="movies" className="contentSection">
-          <div className="sectionHeader">
-            <div>
-              <h3>Movies</h3>
-              <p>Choose a movie to start watching.</p>
-            </div>
-
-            <input
-              className="searchInput"
-              type="text"
-              placeholder="Search movies..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-
-          <div className="categoryFilters">
-            {categories.map((category) => (
-              <button
-                type="button"
-                key={category}
-                className={activeCategory === category ? "activeCategory" : ""}
-                onClick={() => setActiveCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          {filteredVideos.length === 0 ? (
-            <p className="emptyText">No movies found.</p>
-          ) : (
-            <div className="videoGrid">
-              {filteredVideos.map((video) => (
-                <div
-                  className="videoCard"
-                  key={video.id}
-                  onClick={() => playMovie(video)}
-                >
-                  <div className="videoThumbWrap">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="videoThumbnailContain"
-                    />
-                  </div>
-
-                  <div>
-                    <h4>{video.title}</h4>
-                    <p>{video.category}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section id="my-list" className="contentSection">
-          <h3>My List</h3>
-
-          {watchList.length === 0 ? (
-            <p className="emptyText">No movies added yet.</p>
-          ) : (
-            <div className="videoGrid">
-              {watchList.map((video) => (
-                <div className="videoCard" key={video.id}>
-                  <div className="videoThumbWrap" onClick={() => playMovie(video)}>
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="videoThumbnailContain"
-                    />
-                  </div>
-
-                  <div>
-                    <h4>{video.title}</h4>
-                    <p>{video.category}</p>
-
-                    <button
-                      type="button"
-                      className="removeBtn"
-                      onClick={() => removeFromWatchList(video.id)}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
-  );
-}
-
-function App() {
-  const isAdminPage = window.location.pathname === "/admin";
-
-  if (isAdminPage) {
+  if (path === "/admin") {
     return <AdminPage />;
   }
 
-  return <HomePage />;
+  if (path.startsWith("/movie/")) {
+    const movieId = decodeURIComponent(path.replace("/movie/", ""));
+    const movie = movies.find((item) => String(item.id) === movieId);
+
+    if (loadingMovies) {
+      return (
+        <Layout>
+          <section className="contentSection">
+            <h2>Loading movie...</h2>
+          </section>
+        </Layout>
+      );
+    }
+
+    return <MovieDetailsPage movie={movie} />;
+  }
+
+  if (path.startsWith("/watch/")) {
+    const movieId = decodeURIComponent(path.replace("/watch/", ""));
+    const movie = movies.find((item) => String(item.id) === movieId);
+
+    if (loadingMovies) {
+      return (
+        <Layout>
+          <section className="contentSection">
+            <h2>Loading player...</h2>
+          </section>
+        </Layout>
+      );
+    }
+
+    return <PlayerPage movie={movie} />;
+  }
+
+  return <LandingPage movies={movies} loading={loadingMovies} />;
 }
 
 export default App;
