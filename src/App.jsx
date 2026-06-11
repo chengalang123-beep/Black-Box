@@ -283,10 +283,6 @@ function LandingPage({ movies, loading }) {
         <div>
           <span className="tag">BlackBox Streaming</span>
           <h1>Watch your movies anytime.</h1>
-          <p>
-            Browse your uploaded movie library and choose a title to start
-            watching.
-          </p>
         </div>
       </section>
 
