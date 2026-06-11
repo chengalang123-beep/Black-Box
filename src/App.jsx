@@ -263,6 +263,25 @@ function HomePage() {
     return data.watchUrl;
   }
 
+  function goToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  function playMovie(video) {
+    setSelectedVideo(video);
+
+    setTimeout(() => {
+      goToSection("player");
+    }, 100);
+  }
+
   useEffect(() => {
     async function loadMovies() {
       try {
@@ -371,6 +390,16 @@ function HomePage() {
           <div className="brandLogo">
             <img src="/blackbox-logo.png" alt="BlackBox Logo" />
           </div>
+
+          <nav>
+            <button type="button" onClick={() => goToSection("movies")}>
+              Movies
+            </button>
+
+            <button type="button" onClick={() => goToSection("my-list")}>
+              My List
+            </button>
+          </nav>
         </aside>
 
         <main className="main">
@@ -393,9 +422,13 @@ function HomePage() {
         </div>
 
         <nav>
-          <button type="button">Home</button>
-          <button type="button">Movies</button>
-          <button type="button">My List</button>
+          <button type="button" onClick={() => goToSection("movies")}>
+            Movies
+          </button>
+
+          <button type="button" onClick={() => goToSection("my-list")}>
+            My List
+          </button>
         </nav>
       </aside>
 
@@ -409,11 +442,13 @@ function HomePage() {
             <p>{selectedVideo.description}</p>
 
             <div className="heroButtons">
-              <a href="#player">
-                <button type="button" className="watchBtn">
-                  Watch Now
-                </button>
-              </a>
+              <button
+                type="button"
+                className="watchBtn"
+                onClick={() => goToSection("player")}
+              >
+                Watch Now
+              </button>
 
               <button
                 type="button"
@@ -435,7 +470,7 @@ function HomePage() {
         </section>
 
         <section id="player" className="playerSection">
-          <h3>Video Player</h3>
+          <h3>{selectedVideo.title}</h3>
 
           <video
             key={selectedVideo.videoUrl}
@@ -444,20 +479,20 @@ function HomePage() {
             className="videoPlayer"
           />
 
-          <p className="videoTitle">{selectedVideo.title}</p>
+          <p className="videoTitle">{selectedVideo.category}</p>
         </section>
 
-        <section className="contentSection">
+        <section id="movies" className="contentSection">
           <div className="sectionHeader">
             <div>
-              <h3>Browse Streams</h3>
-              <p>Choose a video to start watching.</p>
+              <h3>Movies</h3>
+              <p>Choose a movie to start watching.</p>
             </div>
 
             <input
               className="searchInput"
               type="text"
-              placeholder="Search videos..."
+              placeholder="Search movies..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
@@ -477,14 +512,14 @@ function HomePage() {
           </div>
 
           {filteredVideos.length === 0 ? (
-            <p className="emptyText">No videos found.</p>
+            <p className="emptyText">No movies found.</p>
           ) : (
             <div className="videoGrid">
               {filteredVideos.map((video) => (
                 <div
                   className="videoCard"
                   key={video.id}
-                  onClick={() => setSelectedVideo(video)}
+                  onClick={() => playMovie(video)}
                 >
                   <div className="videoThumbWrap">
                     <img
@@ -504,21 +539,20 @@ function HomePage() {
           )}
         </section>
 
-        <section className="contentSection">
+        <section id="my-list" className="contentSection">
           <h3>My List</h3>
 
           {watchList.length === 0 ? (
-            <p className="emptyText">No videos added yet.</p>
+            <p className="emptyText">No movies added yet.</p>
           ) : (
             <div className="videoGrid">
               {watchList.map((video) => (
                 <div className="videoCard" key={video.id}>
-                  <div className="videoThumbWrap">
+                  <div className="videoThumbWrap" onClick={() => playMovie(video)}>
                     <img
                       src={video.thumbnail}
                       alt={video.title}
                       className="videoThumbnailContain"
-                      onClick={() => setSelectedVideo(video)}
                     />
                   </div>
 
