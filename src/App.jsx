@@ -247,7 +247,7 @@ function Layout({ children }) {
 
         <nav>
           <a href="/">Movies</a>
-          <a href="/#my-list">My List</a>
+          <a href="/my-list">My List</a>
         </nav>
       </aside>
 
@@ -256,7 +256,40 @@ function Layout({ children }) {
   );
 }
 
-function LandingPage({ movies, loading }) {
+function MoviePosterCard({ movie, onAddToList, isSaved }) {
+  function openMovie() {
+    window.location.href = `/movie/${movie.id}`;
+  }
+
+  function addMovie(event) {
+    event.stopPropagation();
+    onAddToList(movie);
+  }
+
+  return (
+    <div className="posterCard" onClick={openMovie}>
+      <button
+        type="button"
+        className={`addListBtn ${isSaved ? "saved" : ""}`}
+        onClick={addMovie}
+        title={isSaved ? "Already in My List" : "Add to My List"}
+      >
+        {isSaved ? "✓" : "+"}
+      </button>
+
+      <div className="posterImageWrap">
+        <img src={movie.thumbnail} alt={movie.title} />
+      </div>
+
+      <div className="posterInfo">
+        <h3>{movie.title}</h3>
+        <p>{movie.category}</p>
+      </div>
+    </div>
+  );
+}
+
+function LandingPage({ movies, loading, onAddToList, isInMyList }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -328,16 +361,12 @@ function LandingPage({ movies, loading }) {
         ) : (
           <div className="posterGrid">
             {filteredMovies.map((movie) => (
-              <a href={`/movie/${movie.id}`} className="posterCard" key={movie.id}>
-                <div className="posterImageWrap">
-                  <img src={movie.thumbnail} alt={movie.title} />
-                </div>
-
-                <div className="posterInfo">
-                  <h3>{movie.title}</h3>
-                  <p>{movie.category}</p>
-                </div>
-              </a>
+              <MoviePosterCard
+                key={movie.id}
+                movie={movie}
+                onAddToList={onAddToList}
+                isSaved={isInMyList(movie.id)}
+              />
             ))}
           </div>
         )}
@@ -346,7 +375,67 @@ function LandingPage({ movies, loading }) {
   );
 }
 
-function MovieDetailsPage({ movie }) {
+function MyListPage({ watchList, onRemoveFromList, onAddToList, isInMyList }) {
+  return (
+    <Layout>
+      <section className="movieLibrary">
+        <div className="sectionHeader">
+          <div>
+            <h2>My List</h2>
+            <p>
+              {watchList.length === 0
+                ? "No movies added yet."
+                : `${watchList.length} saved movie${
+                    watchList.length === 1 ? "" : "s"
+                  }`}
+            </p>
+          </div>
+
+          <a className="watchBtn linkButton" href="/">
+            Browse Movies
+          </a>
+        </div>
+
+        {watchList.length === 0 ? (
+          <p className="emptyText">
+            Go to Movies and click the + icon to add a movie here.
+          </p>
+        ) : (
+          <div className="posterGrid">
+            {watchList.map((movie) => (
+              <div className="posterCard" key={movie.id}>
+                <button
+                  type="button"
+                  className="addListBtn removeSaved"
+                  onClick={() => onRemoveFromList(movie.id)}
+                  title="Remove from My List"
+                >
+                  ×
+                </button>
+
+                <div
+                  className="posterImageWrap"
+                  onClick={() => {
+                    window.location.href = `/movie/${movie.id}`;
+                  }}
+                >
+                  <img src={movie.thumbnail} alt={movie.title} />
+                </div>
+
+                <div className="posterInfo">
+                  <h3>{movie.title}</h3>
+                  <p>{movie.category}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </Layout>
+  );
+}
+
+function MovieDetailsPage({ movie, onAddToList, isSaved }) {
   if (!movie) {
     return (
       <Layout>
@@ -377,6 +466,14 @@ function MovieDetailsPage({ movie }) {
             <a className="watchBtn linkButton" href={`/watch/${movie.id}`}>
               Play Movie
             </a>
+
+            <button
+              type="button"
+              className="listBtn"
+              onClick={() => onAddToList(movie)}
+            >
+              {isSaved ? "✓ Added to My List" : "+ My List"}
+            </button>
 
             <a className="listBtn linkButton" href="/">
               Back to Movies
@@ -431,6 +528,34 @@ function PlayerPage({ movie }) {
 function App() {
   const [movies, setMovies] = useState([]);
   const [loadingMovies, setLoadingMovies] = useState(true);
+  const [watchList, setWatchList] = useState(() => {
+    const saved = localStorage.getItem("blackbox-my-list");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("blackbox-my-list", JSON.stringify(watchList));
+  }, [watchList]);
+
+  function isInMyList(movieId) {
+    return watchList.some((movie) => String(movie.id) === String(movieId));
+  }
+
+  function addToMyList(movie) {
+    if (isInMyList(movie.id)) {
+      alert("This movie is already in My List.");
+      return;
+    }
+
+    setWatchList((prev) => [...prev, movie]);
+    alert(`${movie.title} added to My List.`);
+  }
+
+  function removeFromMyList(movieId) {
+    setWatchList((prev) =>
+      prev.filter((movie) => String(movie.id) !== String(movieId))
+    );
+  }
 
   async function getSignedWatchUrl(videoKey) {
     const response = await fetch("/api/r2-watch-url", {
@@ -498,6 +623,17 @@ function App() {
     return <AdminPage />;
   }
 
+  if (path === "/my-list") {
+    return (
+      <MyListPage
+        watchList={watchList}
+        onRemoveFromList={removeFromMyList}
+        onAddToList={addToMyList}
+        isInMyList={isInMyList}
+      />
+    );
+  }
+
   if (path.startsWith("/movie/")) {
     const movieId = decodeURIComponent(path.replace("/movie/", ""));
     const movie = movies.find((item) => String(item.id) === movieId);
@@ -512,7 +648,13 @@ function App() {
       );
     }
 
-    return <MovieDetailsPage movie={movie} />;
+    return (
+      <MovieDetailsPage
+        movie={movie}
+        onAddToList={addToMyList}
+        isSaved={movie ? isInMyList(movie.id) : false}
+      />
+    );
   }
 
   if (path.startsWith("/watch/")) {
@@ -532,7 +674,14 @@ function App() {
     return <PlayerPage movie={movie} />;
   }
 
-  return <LandingPage movies={movies} loading={loadingMovies} />;
+  return (
+    <LandingPage
+      movies={movies}
+      loading={loadingMovies}
+      onAddToList={addToMyList}
+      isInMyList={isInMyList}
+    />
+  );
 }
 
 export default App;

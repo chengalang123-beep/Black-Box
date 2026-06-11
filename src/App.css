@@ -540,3 +540,47 @@ a {
     height: 240px;
   }
 }
+
+/* MY LIST ADD BUTTON */
+
+.posterCard {
+  position: relative;
+  cursor: pointer;
+}
+
+.addListBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 217, 255, 0.95);
+  color: #001014;
+  font-size: 25px;
+  font-weight: 900;
+  cursor: pointer;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 26px rgba(0, 217, 255, 0.25);
+  transition: 0.2s ease;
+}
+
+.addListBtn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 35px rgba(0, 217, 255, 0.38);
+}
+
+.addListBtn.saved {
+  background: #9fe870;
+  color: #102000;
+}
+
+.addListBtn.removeSaved {
+  background: rgba(255, 80, 80, 0.95);
+  color: white;
+  font-size: 28px;
+}
